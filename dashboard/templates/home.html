@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* Fondo verdesito */
+    }
+
+    .card-feature {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    }
+
+    .card-feature:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-outline-success, .btn-outline-info, .btn-outline-warning {
+        border-width: 2px;
+    }
+</style>
+
+<div class="container text-center mt-5">
+    <div class="animate__animated animate__fadeInDown">
+        <h1 class="display-4 fw-bold text-success mb-2">Sistema de Invernadero Inteligente para Pimientos</h1>
+        <p class="lead text-muted mb-5">Monitoreo y control preciso del clima y nutrientes para la óptima producción de pimientos.</p>
+
+        <h3 class="mt-4 mb-4 text-success">Funcionalidades Específicas</h3>
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow p-4 rounded-lg card-feature">
+                    <i class="fas fa-thermometer-half fa-3x text-success mb-3"></i>
+                    <h5 class="mb-2">Control de Temperatura y Humedad</h5>
+                    <p class="text-muted">Monitoreo y ajuste en tiempo real para el desarrollo óptimo de pimientos.</p>
+                    <button class="btn btn-outline-success mt-3" data-bs-toggle="modal" data-bs-target="#tempModal">Ver Detalles</button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow p-4 rounded-lg card-feature">
+                    <i class="fas fa-flask fa-3x text-info mb-3"></i>
+                    <h5 class="mb-2">Monitoreo de Nutrientes Específicos</h5>
+                    <p class="text-muted">Análisis y ajuste de nutrientes (Nitrógeno, Fósforo, Potasio) para pimientos.</p>
+                    <button class="btn btn-outline-info mt-3" data-bs-toggle="modal" data-bs-target="#riegoModal">Configurar Nutrientes</button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow p-4 rounded-lg card-feature">
+                    <i class="fas fa-wind fa-3x text-warning mb-3"></i>
+                    <h5 class="mb-2">Control de Polinización</h5>
+                    <p class="text-muted">Ajuste de ventilación y movimiento de aire para polinización eficiente.</p>
+                    <button class="btn btn-outline-warning mt-3" data-bs-toggle="modal" data-bs-target="#reportesModal">Ver Reportes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tempModal" tabindex="-1" aria-labelledby="tempModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tempModalLabel">Detalles de Control de Temperatura y Humedad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Información detallada sobre la temperatura y humedad óptimas para el cultivo de pimientos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="riegoModal" tabindex="-1" aria-labelledby="riegoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="riegoModalLabel">Configuración de Nutrientes Específicos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Ajuste de niveles de Nitrógeno, Fósforo y Potasio para el crecimiento ideal de pimientos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportesModal" tabindex="-1" aria-labelledby="reportesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportesModalLabel">Reportes de Control de Polinización</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Datos y gráficas sobre la eficiencia de la polinización y ajustes recomendados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{form}}
+
+{% endblock %}

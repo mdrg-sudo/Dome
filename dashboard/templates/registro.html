@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Agregamos Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<style>
+    /* Fondo con degradado */
+    body {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    }
+
+    /* Contenedor principal */
+    .container-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 90vh;
+    }
+
+    /* Contenedor del formulario */
+    .registration-form {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 40px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        
+        /* Animación de entrada */
+        animation: fadeInZoom 0.8s ease-in-out;
+    }
+
+    /* Definimos la animación personalizada */
+    @keyframes fadeInZoom {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Icono de usuario */
+    .user-icon {
+        width: 80px;
+        height: 80px;
+        background-color: #4caf50;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 15px;
+    }
+
+    .user-icon i {
+        font-size: 40px;
+        color: white;
+    }
+
+    /* Estilos del formulario */
+    .form-group {
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding-left: 40px;
+    }
+
+    /* Iconos dentro de los inputs */
+    .form-group i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #777;
+    }
+
+    /* Botón de registro */
+    .btn-primary {
+        background-color: #4caf50;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-size: 1.1em;
+        width: 100%;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #43a047;
+    }
+</style>
+
+<div class="container container-center">
+    <div class="registration-form animate__animated animate__zoomIn"> <!-- Se aplica animación -->
+        <!-- Icono de usuario -->
+        <div class="user-icon">
+            <i class="fas fa-user"></i>
+        </div>
+
+        <h2>Registrarse</h2>
+
+        <form action="/registro/" method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <i class="fas fa-user"></i> 
+                <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password1" class="form-control" placeholder="Contraseña" required>
+            </div>
+
+            <!-- Repetir contraseña -->
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password2" class="form-control" placeholder="Repetir contraseña" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Registrarse</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

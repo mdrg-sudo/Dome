@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+    }
+
+    .container-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .records-container {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 900px;
+        text-align: center;
+    }
+
+    .table {
+        margin-top: 15px;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .table th {
+        background-color: #f1f8e9;
+    }
+
+    .table td, .table th {
+        padding: 12px;
+        text-align: center;
+    }
+</style>
+
+<div class="container container-center">
+    <div class="records-container animate__animated animate__fadeInDown">
+        <h2 class="mb-4">Control de Registros de Actividad</h2>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Dispositivo</th>
+                        <th>Usuario</th>
+                        <th>Fecha de Registro</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                    <tr>
+                        <td>{{ registro.id }}</td>
+                        <td>{{ registro.cveDispositivo.nombre }}</td>
+                        <td>{{ registro.cveRegistro.username }}</td>
+                        <td>{{ registro.fechaRegistro }}</td>
+                        <td>{{ registro.valor }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No hay registros disponibles.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

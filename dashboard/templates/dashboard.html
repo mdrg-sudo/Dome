@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2); /* Fondo azulito */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .dashboard-container {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="container container-center">
+    <div class="dashboard-container animate__animated animate__fadeInDown">
+        <h1>Dashboard</h1>
+
+        <div class="row">
+            <div class="col-lg-6 col-md-12">
+                <div id="panelTemperatura" class="card text-white bg-success m-1">
+                    <div class="card-header">Temperatura en tiempo real</div>
+                    <div class="card-body">
+                        <h2 id="txtTemperatura">0 °C</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12">
+                <div class="card text-white bg-primary m-1">
+                    <div class="card-header">Temperatura Promedio</div>
+                    <div class="card-body">
+                        <h2>{{promedio.total | floatformat:1}} °C</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var labels = [];
+    var values = [];
+    
+    const url = 'ws:broker.emqx.io:8083/mqtt';
+    const options = {
+        clientId: 'web_' + parseInt(Math.random() * 100),
+        username: 'emqx_test',
+        password: 'emqx_test',
+        clean: true,
+        connectionTimeout: 4000
+    };
+
+    const client = mqtt.connect(url, options);
+
+    client.on('connect', function() {
+        client.subscribe('gir0652/bhn/temp3');
+    });
+
+    client.on('message', function(topic, message) {
+        var txtTemperatura = document.getElementById('txtTemperatura');
+        var panel = document.getElementById('panelTemperatura');
+        txtTemperatura.innerHTML = message.toString() + ' °C';
+
+        var valor = parseFloat(message.toString());
+        if (valor < 15) {
+            panel.className = 'card text-white bg-warning m-1';
+        } else if (valor >= 15 && valor < 30) {
+            panel.className = 'card text-white bg-success m-1';
+        } else {
+            panel.className = 'card text-white bg-danger m-1';
+        }
+    });
+
+    client.on('error', function(error) {
+        console.log("ERROR BROKER:", error);
+    });
+</script>
+
+{% for dato in datos %}
+    <script>
+        labels.push("{{ dato.fechaRegistro | date:'d/M/y' }}");
+        values.push("{{ dato.valor_promedio }}");
+    </script>
+{% endfor %}
+
+<script>
+    const ctx = document.getElementById('myChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Temperatura',
+                data: values,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+    }
+
+    .container-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .devices-container {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background-color: #4caf50;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-size: 1.1em;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #43a047;
+    }
+
+    .table {
+        margin-top: 15px;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .table th {
+        background-color: #f1f8e9;
+    }
+
+    .btn-info {
+        background-color: #03a9f4;
+        color: white;
+        border-radius: 5px;
+    }
+
+    .btn-danger {
+        background-color: #f44336;
+        color: white;
+        border-radius: 5px;
+    }
+
+    .modal-header h5 {
+        color: #333;
+    }
+
+    .modal-body label {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .modal-footer button {
+        margin: 5px;
+    }
+</style>
+
+<div class="container container-center">
+    <div class="devices-container animate__animated animate__fadeInDown">
+        <h1 class="mb-4">Dispositivos</h1>
+
+        <div class="text-end mb-3">
+            <button class="btn btn-primary shadow" id="agregarDispositivoBtn">
+                <span class="fa fa-plus"></span> Agregar
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered" id="dispositivosTable">
+                <thead class="text-center table-light">
+                    <tr>
+                        <th>Nombre del dispositivo</th>
+                        <th>Descripción</th>
+                        <th>Estatus</th>
+                        <th>Editar</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dispositivo in dispositivos %}
+                    <tr>
+                        <td>{{ dispositivo.nombre }}</td>
+                        <td>{{ dispositivo.descripcion }}</td>
+                        <td>{{ dispositivo.estatus }}</td>
+                        <td>
+                            <button class="btn btn-info shadow editarDispositivoBtn" data-id="{{ dispositivo.id }}"
+                                    data-nombre="{{ dispositivo.nombre }}"
+                                    data-descripcion="{{ dispositivo.descripcion }}"
+                                    data-estatus="{{ dispositivo.estatus }}">
+                                Editar
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger shadow eliminarDispositivoBtn" data-id="{{ dispositivo.id }}">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="agregarEditarModal" tabindex="-1" aria-labelledby="agregarEditarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarEditarModalLabel">Agregar/Editar Dispositivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="agregarEditarForm">
+                    <input type="hidden" id="id" name="id">
+                    <div class="form-group">
+                        <label for="nombre" class="form-label">Nombre del dispositivo</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="estatus" class="form-label">Estatus</label>
+                        <input type="text" class="form-control" id="estatus" name="estatus" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="guardarDispositivoBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eliminarModalLabel">Eliminar Dispositivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este dispositivo?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminarBtn">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const agregarDispositivoBtn = document.getElementById('agregarDispositivoBtn');
+        const agregarEditarModalEl = document.getElementById('agregarEditarModal');
+        const agregarEditarModal = new bootstrap.Modal(agregarEditarModalEl);
+        const agregarEditarForm = document.getElementById('agregarEditarForm');
+        const guardarDispositivoBtn = document.getElementById('guardarDispositivoBtn');
+
+        const eliminarModalEl = document.getElementById('eliminarModal');
+        const eliminarModal = new bootstrap.Modal(eliminarModalEl);
+        const confirmarEliminarBtn = document.getElementById('confirmarEliminarBtn');
+
+        let dispositivoIdAEliminar = null;
+        let modo = 'agregar'; // 'agregar' o 'editar'
+
+        // --- Funciones para Modales ---
+
+        function mostrarAgregarModal() {
+            modo = 'agregar';
+            agregarEditarModalLabel.textContent = 'Agregar Dispositivo';
+            agregarEditarForm.reset();
+            agregarEditarModal.show();
+        }
+
+        function mostrarEditarModal(id, nombre, descripcion, estatus) {
+            modo = 'editar';
+            agregarEditarModalLabel.textContent = 'Editar Dispositivo';
+            agregarEditarForm.reset();
+            document.getElementById('id').value = id;
+            document.getElementById('nombre').value = nombre;
+            document.getElementById('descripcion').value = descripcion;
+            document.getElementById('estatus').value = estatus;
+            agregarEditarModal.show();
+        }
+
+        function mostrarEliminarModal(id) {
+            dispositivoIdAEliminar = id;
+            eliminarModal.show();
+        }
+
+        // --- Event Listeners ---
+
+        agregarDispositivoBtn.addEventListener('click', mostrarAgregarModal);
+
+        document.querySelectorAll('.editarDispositivoBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+                const descripcion = this.dataset.descripcion;
+                const estatus = this.dataset.estatus;
+                mostrarEditarModal(id, nombre, descripcion, estatus);
+            });
+        });
+
+        document.querySelectorAll('.eliminarDispositivoBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                mostrarEliminarModal(id);
+            });
+        });
+
+        confirmarEliminarBtn.addEventListener('click', function() {
+            if (dispositivoIdAEliminar) {
+                eliminarDispositivo(dispositivoIdAEliminar);
+            }
+        });
+
+        guardarDispositivoBtn.addEventListener('click', function(event) {
+            event.preventDefault(); // Evita el envío del formulario por defecto
+
+            if (modo === 'agregar') {
+                agregarDispositivo();
+            } else if (modo === 'editar') {
+                editarDispositivo();
+            }
+        });
+
+        // --- Funciones para Operaciones CRUD ---
+
+        function agregarDispositivo() {
+            const nombre = document.getElementById('nombre').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const estatus = document.getElementById('estatus').value;
+
+            fetch('/dispositivos/agregar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ nombre, descripcion, estatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                agregarEditarModal.hide();
+                location.reload(); // Recarga la página para actualizar la tabla
+            })
+            .catch(error => {
+                console.error('Error al agregar dispositivo:', error);
+                alert('Error al agregar dispositivo'); // Muestra una alerta en caso de error
+            });
+        }
+
+        function editarDispositivo() {
+            const id = document.getElementById('id').value;
+            const nombre = document.getElementById('nombre').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const estatus = document.getElementById('estatus').value;
+
+            fetch(`/dispositivos/editar/${id}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ nombre, descripcion, estatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                agregarEditarModal.hide();
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error al editar dispositivo:', error);
+                alert('Error al editar dispositivo');
+            });
+        }
+
+        function eliminarDispositivo(id) {
+            fetch(`/dispositivos/eliminar/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                eliminarModal.hide();
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error al eliminar dispositivo:', error);
+                alert('Error al eliminar dispositivo');
+            });
+        }
+    });
+</script>
+
+{% endblock %}

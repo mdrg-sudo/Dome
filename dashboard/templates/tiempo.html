@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    h4 {
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center; /* Centrar el título */
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+        text-align: center; /* Centrar la fecha */
+        margin-bottom: 30px;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transición suave */
+        border: 1px solid #e0e0e0;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: #81c784; /* Verde suave para encabezados */
+        color: #fff;
+        border-bottom: 1px solid #a5d6a7;
+        padding: 12px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        text-align: center;
+    }
+
+    .card-body {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .card-title {
+        color: #2e7d32; /* Verde oscuro para títulos de datos */
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+
+    #myRadarChart {
+        background-color: #f5f5f5;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4 col-md-6">
+            <h4>Análisis del Invernadero</h4>
+            <p class="text-muted">Hoy: {{ today | date:'d/M/y' }}</p>
+
+            <div class="card">
+                <div class="card-header">Temperatura Promedio (°C)</div>
+                <div class="card-body">
+                    <h5 class="card-title" id="txtTemperatura">22.5°C</h5>
+                    <p class="card-text">Temperatura promedio registrada durante el día.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Humedad del Suelo (%)</div>
+                <div class="card-body">
+                    <h5 class="card-title">65%</h5>
+                    <p class="card-text">Nivel promedio de humedad del suelo.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Horas de Luz Promedio (h)</div>
+                <div class="card-body">
+                    <h5 class="card-title">10 h</h5>
+                    <p class="card-text">Promedio de horas de luz recibidas por las plantas diariamente.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Riego Diario (L)</div>
+                <div class="card-body">
+                    <h5 class="card-title">5 Litros</h5>
+                    <p class="card-text">Cantidad de agua utilizada para el riego diariamente.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-md-6">
+            <div class="animate__animated animate__fadeInUp">
+                <canvas id="myRadarChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<script>
+// Inicialización de fechas y datos dinámicos
+const today = new Date();
+const dateString = today.toLocaleDateString('en-GB');
+
+const labels = [dateString];
+let valuesTemp = [22.5];
+
+const data = {
+    labels: labels,
+    datasets: [{
+        label: 'Temperatura Promedio (°C)',
+        data: valuesTemp,
+        fill: true,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgb(255, 99, 132)',
+        pointBackgroundColor: 'rgb(255, 99, 132)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgb(255, 99, 132)'
+    }]
+};
+
+const config = {
+    type: 'radar',
+    data: data,
+    options: {
+        elements: {
+            line: {
+                borderWidth: 3
+            }
+        },
+        scales: {
+            r: {
+                angleLines: {
+                    display: true
+                },
+                suggestedMin: 0,
+                suggestedMax: 40
+            }
+        }
+    }
+};
+
+const ctx = document.getElementById('myRadarChart').getContext('2d');
+const myChart = new Chart(ctx, config);
+
+// Configuración MQTT
+const url = 'ws://broker.emqx.io:8083/mqtt';
+const options = {
+    clientId: 'web_' + parseInt(Math.random() * 100),
+    username: 'emqx_test',
+    password: 'emqx_test',
+    clean: true,
+    connectionTimeout: 4000
+};
+
+const client = mqtt.connect(url, options);
+
+// Suscripción y manejo de datos en tiempo real
+client.on('connect', function () {
+    client.subscribe('gir0652/bhn/temp/3');
+});
+
+client.on('message', function (topic, message) {
+    const txtTemperatura = document.getElementById('txtTemperatura');
+    const newTemp = parseFloat(message.toString());
+
+    // Actualizar el valor de la temperatura en el panel
+    txtTemperatura.innerHTML = newTemp + ' °C';
+
+    // Actualizar los datos en la gráfica
+    valuesTemp.push(newTemp);
+    labels.push(new Date().toLocaleDateString('en-GB'));
+    if (valuesTemp.length > 12) {
+        valuesTemp.shift();
+        labels.shift();
+    }
+
+    myChart.data.labels = labels;
+    myChart.data.datasets[0].data = valuesTemp;
+    myChart.update();
+});
+
+client.on('error', function (error) {
+    console.log("ERROR BROKER:", error);
+});
+</script>
+
+{% endblock %}
