@@ -10,6 +10,10 @@ from django.db.models import Count, Sum
 from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.generic import DetailView
+from .models import Invernadero, Sensor, Datos_Sensores
 
 logger = logging.getLogger(__name__)
 
@@ -141,4 +145,27 @@ def lista_registros(request):
     registros = Registro.objects.filter(cveRegistro=user.id).order_by('fechaRegistro')
     return render(request, 'control.html', {'registros': registros})
 
-       
+def invernadero_detail(request, invernadero_id):
+    invernadero = get_object_or_404(Invernadero, id=invernadero_id)
+    return render(request, 'dashboard/tiempo.html', {
+        'invernadero': invernadero
+    })
+
+# Vista API para obtener los datos más recientes de los sensores
+def get_sensor_data(request, invernadero_id):
+    invernadero = get_object_or_404(Invernadero, id=invernadero_id)
+    sensors = Sensor.objects.filter(invernadero=invernadero)
+    
+    data = []
+    for sensor in sensors:
+        latest_data = Datos_Sensores.objects.filter(sensor=sensor).order_by('-fecha').first()
+        if latest_data:
+            data.append({
+                'sensor_id': sensor.id,
+                'sensor_tipo': sensor.tipo,
+                'valor': str(latest_data.valor),
+                'fecha': latest_data.fecha.strftime('%Y-%m-%d %H:%M:%S'),
+                'descripcion': sensor.descripcion
+            })
+    
+    return JsonResponse({'sensors': data})

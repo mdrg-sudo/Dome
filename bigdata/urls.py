@@ -16,5 +16,6 @@ urlpatterns = [
     path('dispositivos/editar/<int:dispositivo_id>/', views.editar_dispositivo, name='editar_dispositivo'),
     path('dispositivos/eliminar/<int:dispositivo_id>/', views.eliminar_dispositivo, name='eliminar_dispositivo'),
     path('control/', views.lista_registros, name='control'),
-
+     path('invernadero/<int:invernadero_id>/', views.invernadero_detail, name='invernadero_detail'),
+    path('api/sensor-data/<int:invernadero_id>/', views.get_sensor_data, name='get_sensor_data'),
 ]
