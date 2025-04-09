@@ -169,3 +169,14 @@ def get_sensor_data(request, invernadero_id):
             })
     
     return JsonResponse({'sensors': data})
+
+def get_last_temperature(request):
+    ultimo_dato = Datos_Sensores.objects.filter(sensor__tipo='DHT11').order_by('-fecha').first()
+    
+    if ultimo_dato:
+        return JsonResponse({
+            'valor': str(ultimo_dato.valor),
+            'fecha': ultimo_dato.fecha.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    else:
+        return JsonResponse({'valor': '0', 'fecha': None})

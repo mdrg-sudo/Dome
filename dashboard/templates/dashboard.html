@@ -67,39 +67,38 @@
     var labels = [];
     var values = [];
     
-    const url = 'ws:broker.emqx.io:8083/mqtt';
-    const options = {
-        clientId: 'web_' + parseInt(Math.random() * 100),
-        username: 'emqx_test',
-        password: 'emqx_test',
-        clean: true,
-        connectionTimeout: 4000
-    };
-
-    const client = mqtt.connect(url, options);
-
-    client.on('connect', function() {
-        client.subscribe('gir0652/bhn/temp3');
-    });
-
-    client.on('message', function(topic, message) {
-        var txtTemperatura = document.getElementById('txtTemperatura');
-        var panel = document.getElementById('panelTemperatura');
-        txtTemperatura.innerHTML = message.toString() + ' °C';
-
-        var valor = parseFloat(message.toString());
-        if (valor < 15) {
-            panel.className = 'card text-white bg-warning m-1';
-        } else if (valor >= 15 && valor < 30) {
-            panel.className = 'card text-white bg-success m-1';
-        } else {
-            panel.className = 'card text-white bg-danger m-1';
-        }
-    });
-
-    client.on('error', function(error) {
-        console.log("ERROR BROKER:", error);
-    });
+    // Función para actualizar la temperatura desde la base de datos
+    function actualizarTemperatura() {
+        fetch('/api/last-temperature/')
+            .then(response => response.json())
+            .then(data => {
+                var txtTemperatura = document.getElementById('txtTemperatura');
+                var panel = document.getElementById('panelTemperatura');
+                
+                if (data.valor) {
+                    const valor = parseFloat(data.valor);
+                    txtTemperatura.innerHTML = valor + ' °C';
+                    
+                    // Actualizamos el color de la tarjeta según el valor
+                    if (valor < 15) {
+                        panel.className = 'card text-white bg-warning m-1';
+                    } else if (valor >= 15 && valor < 30) {
+                        panel.className = 'card text-white bg-success m-1';
+                    } else {
+                        panel.className = 'card text-white bg-danger m-1';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener la temperatura:', error);
+            });
+    }
+    
+    // Ejecutar inmediatamente al cargar la página
+    actualizarTemperatura();
+    
+    // Configurar actualización cada 10 segundos
+    setInterval(actualizarTemperatura, 10000);
 </script>
 
 {% for dato in datos %}

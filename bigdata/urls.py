@@ -18,4 +18,5 @@ urlpatterns = [
     path('control/', views.lista_registros, name='control'),
      path('invernadero/<int:invernadero_id>/', views.invernadero_detail, name='invernadero_detail'),
     path('api/sensor-data/<int:invernadero_id>/', views.get_sensor_data, name='get_sensor_data'),
+    path('api/last-temperature/', views.get_last_temperature, name='get_last_temperature'),
 ]
