@@ -1,63 +1,194 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
 <style>
     body {
-        background: linear-gradient(135deg, #e0f7fa, #b2ebf2); /* Fondo azulito */
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .container-center {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         flex-direction: column;
         min-height: 100vh;
+        padding: 20px;
     }
 
-    .dashboard-container {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 30px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        width: 90%;
-        max-width: 800px;
+    .dashboard-row {
+        display: flex;
+        flex-wrap: wrap;
+        width: 95%;
+        max-width: 1200px;
+        margin-bottom: 20px;
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    .dashboard-main {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        flex: 1;
+        min-width: 500px;
         text-align: center;
+        display: flex;
+        flex-direction: column;
     }
 
-    .card {
+    .temperature-cards-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 20px;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .temperature-card {
+        background: #f8f9fa;
         border-radius: 10px;
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        padding: 15px;
+        text-align: center;
+        flex: 0 0 calc(50% - 10px);
+    }
+
+    .temperature-card-header {
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 5px;
+    }
+
+    #txtTemperatura {
+        font-size: 1.5em;
+        color: #333;
+    }
+
+    .analysis-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        flex: 0 0 auto;
+        width: auto;
+    }
+
+    .analysis-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .analysis-title {
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 5px;
+    }
+
+    .alerta-baja {
+        background-color: #e6f7ff;
+        color: #0056b3;
+    }
+
+    .alerta-normal {
+        background-color: #d1e7dd;
+        color: #198754;
+    }
+
+    .alerta-alta {
+        background-color: #fffde7;
+        color: #85640c;
+    }
+
+    .alerta-urgente {
+        background-color: #fde2e2;
+        color: #721c24;
+    }
+
+    /* Estilos para la gráfica */
+    #myChart {
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .dashboard-row {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dashboard-main,
+        .analysis-container {
+            width: 95%;
+            min-width: auto;
+            margin-bottom: 20px;
+        }
+
+        .analysis-container {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+
+        .temperature-cards-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .temperature-card {
+            flex: 0 0 auto;
+        }
     }
 </style>
 
 <div class="container container-center">
-    <div class="dashboard-container animate__animated animate__fadeInDown">
-        <h1>Dashboard</h1>
-
-        <div class="row">
-            <div class="col-lg-6 col-md-12">
-                <div id="panelTemperatura" class="card text-white bg-success m-1">
-                    <div class="card-header">Temperatura en tiempo real</div>
-                    <div class="card-body">
-                        <h2 id="txtTemperatura">0 °C</h2>
-                    </div>
+    <div class="dashboard-row animate__animated animate__fadeInDown">
+        <div class="dashboard-main">
+            <h1>Dashboard</h1>
+            <div class="temperature-cards-row">
+                <div class="temperature-card">
+                    <div class="temperature-card-header">Temperatura en tiempo real</div>
+                    <h2 id="txtTemperatura"
+                        class="{% if temperatura_actual < 15 %}text-info{% elif temperatura_actual < 25 %}text-success{% elif temperatura_actual < 35 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ temperatura_actual }} °C
+                    </h2>
+                </div>
+                <div class="temperature-card">
+                    <div class="temperature-card-header">Temperatura Promedio</div>
+                    <h2>{{ promedio.total|floatformat:1 }} °C</h2>
                 </div>
             </div>
-            <div class="col-lg-6 col-md-12">
-                <div class="card text-white bg-primary m-1">
-                    <div class="card-header">Temperatura Promedio</div>
-                    <div class="card-body">
-                        <h2>{{promedio.total | floatformat:1}} °C</h2>
-                    </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <canvas id="myChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <canvas id="myChart"></canvas>
+        <div class="analysis-container animate__animated animate__fadeInUp">
+            <div class="analysis-box {% if alerta_riego == 'Baja' %}alerta-baja{% elif alerta_riego == 'Alta' %}alerta-alta{% elif alerta_riego ==
+                'Urgente' %}alerta-urgente{% else %}alerta-normal{% endif %}">
+                <div class="analysis-title">Alerta</div>
+                <span id="alertaRiego">{{ alerta_riego }}</span>
+            </div>
+            <div class="analysis-box">
+                <div class="analysis-title">Descriptivo</div>
+                <span id="mensajeDescriptivo">{{ mensaje_descriptivo }}</span>
+            </div>
+            <div class="analysis-box">
+                <div class="analysis-title">Predictivo</div>
+                <span id="mensajePredictivo">{{ mensaje_predictivo }}</span>
             </div>
         </div>
     </div>
@@ -66,7 +197,7 @@
 <script>
     var labels = [];
     var values = [];
-    
+
     const url = 'ws:broker.emqx.io:8083/mqtt';
     const options = {
         clientId: 'web_' + parseInt(Math.random() * 100),
@@ -77,29 +208,84 @@
     };
 
     const client = mqtt.connect(url, options);
+    var temperaturaActualDisplay = document.getElementById('txtTemperatura');
 
-    client.on('connect', function() {
+
+    client.on('connect', function () {
         client.subscribe('gir0652/bhn/temp3');
     });
 
-    client.on('message', function(topic, message) {
-        var txtTemperatura = document.getElementById('txtTemperatura');
-        var panel = document.getElementById('panelTemperatura');
-        txtTemperatura.innerHTML = message.toString() + ' °C';
+    client.on('message', function (topic, message) {
+        var temperatura = parseFloat(message.toString());
+        temperaturaActualDisplay.innerHTML = temperatura + ' °C';
 
-        var valor = parseFloat(message.toString());
-        if (valor < 15) {
-            panel.className = 'card text-white bg-warning m-1';
-        } else if (valor >= 15 && valor < 30) {
-            panel.className = 'card text-white bg-success m-1';
+        // Actualiza el color del texto de la temperatura
+        if (temperatura < 15) {
+            temperaturaActualDisplay.className = 'text-info';
+        } else if (temperatura < 25) {
+            temperaturaActualDisplay.className = 'text-success';
+        } else if (temperatura < 35) {
+            temperaturaActualDisplay.className = 'text-warning';
         } else {
-            panel.className = 'card text-white bg-danger m-1';
+            temperaturaActualDisplay.className = 'text-danger';
         }
+        actualizarRiego(temperatura);
     });
 
-    client.on('error', function(error) {
+    client.on('error', function (error) {
         console.log("ERROR BROKER:", error);
     });
+
+    function actualizarRiego(temperatura) {
+        let mensajeDescriptivo = "";
+        let mensajePredictivo = "";
+        let alertaRiego = "";
+
+        if (temperatura < 10) {
+            mensajeDescriptivo = "La temperatura actual es muy baja. El riesgo de necesidad de riego es mínimo.";
+            mensajePredictivo = "Se espera una baja necesidad de riego en condiciones frías.";
+            alertaRiego = "Baja";
+        } else if (temperatura < 15) {
+            mensajeDescriptivo = "La temperatura actual es baja. El riesgo de necesidad de riego es bajo.";
+            mensajePredictivo = "Se espera una necesidad de riego baja a moderada si las condiciones persisten.";
+            alertaRiego = "Baja";
+        } else if (temperatura < 25) {
+            mensajeDescriptivo = "La temperatura actual es óptima. La necesidad de riego es normal.";
+            mensajePredictivo = "Se espera una necesidad de riego normal para un crecimiento saludable.";
+            alertaRiego = "Normal";
+        } else if (temperatura < 30) {
+            mensajeDescriptivo = "La temperatura actual es alta. El riesgo de necesidad de riego es elevado.";
+            mensajePredictivo = "Se prevé una mayor necesidad de riego para evitar el estrés hídrico.";
+            alertaRiego = "Alta";
+        } else if (temperatura < 35) {
+            mensajeDescriptivo = "La temperatura actual es muy alta. La necesidad de riego es alta.";
+            mensajePredictivo = "Se requiere riego pronto para prevenir daños por calor y sequedad.";
+            alertaRiego = "Alta";
+        } else {
+            mensajeDescriptivo = "La temperatura actual es extremadamente alta. ¡Riego urgente necesario!";
+            mensajePredictivo = "Se espera una necesidad de riego crítica para la supervivencia de las plantas.";
+            alertaRiego = "Urgente";
+        }
+
+        var alertaRiegoElement = document.getElementById('alertaRiego');
+        var mensajeDescriptivoElement = document.getElementById('mensajeDescriptivo');
+        var mensajePredictivoElement = document.getElementById('mensajePredictivo');
+
+        alertaRiegoElement.textContent = alertaRiego;
+        mensajeDescriptivoElement.textContent = mensajeDescriptivo;
+        mensajePredictivoElement.textContent = mensajePredictivo;
+
+
+        if (alertaRiego === "Baja") {
+            alertaRiegoElement.parentElement.className = "analysis-box alerta-baja";
+        } else if (alertaRiego === "Normal") {
+            alertaRiegoElement.parentElement.className = "analysis-box alerta-normal";
+        } else if (alertaRiego === "Alta") {
+            alertaRiegoElement.parentElement.className = "analysis-box alerta-alta";
+        } else {
+            alertaRiegoElement.parentElement.className = "analysis-box alerta-urgente";
+        }
+    }
 </script>
 
 {% for dato in datos %}
